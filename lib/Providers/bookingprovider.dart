@@ -1,5 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +17,7 @@ class Bookingprovider extends ChangeNotifier {
   String rideid = '';
   bool loading = false;
   bool enabledbutton = false;
+  Timer? _timer;
 
   void checkifempty(BuildContext context) {
     final homeprovider = Provider.of<Homeprovider>(context, listen: false);
@@ -53,6 +56,9 @@ class Bookingprovider extends ChangeNotifier {
       'Status': 'Pending',
       'rideDuration': {},
     });
+    loading = false;
+    notifyListeners();
+    showridebottomsheet(context, rideid);
   }
 
   void sendfcm(String token) async {
@@ -67,6 +73,11 @@ class Bookingprovider extends ChangeNotifier {
 
   Future<void> sendRideRequesttoNearestDriver(
       String gender, BuildContext context, bool ridemode) async {
+    final docRef =
+        FirebaseFirestore.instance.collection('RideRequest').doc(rideid);
+    final rideRequest = await docRef.get();
+    final List<dynamic> requestedDrivers = rideRequest['requestdrivers'];
+
     for (Nearbyavailabledrivers driver
         in Geofireassistant.nearbyavailabledriverslist) {
       final doc = await FirebaseFirestore.instance
@@ -74,18 +85,35 @@ class Bookingprovider extends ChangeNotifier {
           .doc(driver.key)
           .get();
 
-      if (ridemode) {
-        if (doc['Gender'] == gender) {
+      if (!requestedDrivers.contains(driver.key)) {
+        if (ridemode) {
+          if (doc['Gender'] == gender) {
+            String token = doc['token'];
+            sendfcm(token);
+          }
+        } else {
           String token = doc['token'];
           sendfcm(token);
         }
-      } else {
-        String token = doc['token'];
-        sendfcm(token);
       }
     }
-    loading = false;
-    notifyListeners();
-    showridebottomsheet(context, rideid);
+
+    final updatedRideRequest = await docRef.get();
+    if (updatedRideRequest['Status'] != 'Pending') {
+      stopSendingRequests();
+    }
+  }
+
+  void startSendingRequests(
+      String gender, BuildContext context, bool ridemode) {
+    sendRideRequesttoNearestDriver(gender, context, ridemode);
+    _timer = Timer.periodic(const Duration(seconds: 15), (timer) {
+      sendRideRequesttoNearestDriver(gender, context, ridemode);
+    });
+  }
+
+  void stopSendingRequests() {
+    _timer?.cancel();
+    _timer = null;
   }
 }

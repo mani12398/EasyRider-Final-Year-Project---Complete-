@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:provider/provider.dart';
+import 'package:ridemate/Providers/bookingprovider.dart';
 import 'package:ridemate/Providers/homeprovider.dart';
 import 'package:ridemate/Providers/mapprovider.dart';
 import 'package:ridemate/routing/routing.dart';
@@ -65,6 +66,7 @@ class _RidesState extends State<Rides> {
       bodytxt: "Pick your new Ride",
       rideid: widget.rideid,
     );
+    Provider.of<Bookingprovider>(context, listen: false).stopSendingRequests();
     FirebaseFirestore.instance
         .collection('RideRequest')
         .doc(widget.rideid)
@@ -157,6 +159,8 @@ class _RidesState extends State<Rides> {
             right: 16,
             child: TextButton(
               onPressed: () {
+                Provider.of<Bookingprovider>(context, listen: false)
+                    .stopSendingRequests();
                 navigateToScreen(
                     context,
                     CancelridePage(

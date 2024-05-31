@@ -148,7 +148,6 @@ class _HomepageState extends State<Homepage> {
                           right: 0,
                           bottom: 0,
                           child: Container(
-                            height: 430.h,
                             padding: const EdgeInsets.only(
                                 bottom: 20, top: 15, left: 15, right: 10),
                             decoration: const BoxDecoration(
@@ -183,13 +182,11 @@ class _HomepageState extends State<Homepage> {
                                     title: gettext(value.address),
                                     onTap: () => showsearchbottomsheet(context,
                                         ispickup: true)),
-                                const Divider(color: Appcolors.contentDisbaled),
                                 ListTile(
                                   leading: const Icon(Icons.location_on),
                                   title: gettext(value.destination),
                                   onTap: () => showsearchbottomsheet(context),
                                 ),
-                                const Divider(color: Appcolors.contentDisbaled),
                                 ListTile(
                                   leading: const Icon(Icons.money),
                                   title: gettext(value.faretext == 0
@@ -201,7 +198,6 @@ class _HomepageState extends State<Homepage> {
                                     }
                                   },
                                 ),
-                                const Divider(color: Appcolors.contentDisbaled),
                                 StatefulBuilder(
                                   builder: (context, setState) {
                                     return CheckboxListTile(
@@ -239,8 +235,8 @@ class _HomepageState extends State<Homepage> {
                                         ? () async {
                                             bookingProvider
                                                 .saveRideRequest(context);
-                                            await bookingProvider
-                                                .sendRideRequesttoNearestDriver(
+                                            bookingProvider
+                                                .startSendingRequests(
                                                     getgender(),
                                                     context,
                                                     isChecked);
